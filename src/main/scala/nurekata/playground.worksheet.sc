@@ -17,6 +17,17 @@ enum ListCard:
          case Nil        => true
          case Cons(h, t) => p(h) && t.forall(p)
 
+   def exists(p: Card => Boolean): Boolean =
+      this match
+         case Nil        => false
+         case Cons(h, t) => p(h) || t.exists(p)
+
+   def mkString(start: String, sep: String, end: String): String =
+      this match
+         case Nil          => start + end
+         case Cons(h, Nil) => start + h + end
+         case Cons(h, t)   => t.mkString(start + h + sep, sep, end)
+
 def isRoyalFlush(cs: ListCard): Boolean =
    cs.forall(p => p.suit == cs.head.suit && p.rank.isBroadway)
 
@@ -32,7 +43,6 @@ card.rank
 
 Ten.isBroadway
 Two.isBroadway
-
 
 ListCard.Cons(
    Card(Ten, Diamonds),
