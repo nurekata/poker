@@ -1,3 +1,4 @@
+import java.awt.Dimension
 import nurekata.Rank.*
 import nurekata.Suit.*
 import nurekata.*
@@ -5,38 +6,86 @@ import ListCard.*
 
 enum ListCard:
    case Nil
-   case Cons(hd: Card, tl: ListCard)
+   case ::(hd: Card, tl: ListCard)
 
-   def head =
+   def head: Card =
       this match
-         case Nil        => throw new NoSuchElementException
-         case Cons(h, _) => h
+         case Nil    => throw new NoSuchElementException
+         case h :: _ => h
+
+   def last: Card =
+      this match
+         case Nil      => throw new NoSuchElementException
+         case h :: Nil => h
+         case _ :: tl  => tl.last
+
+   def ::(h: Card): ListCard =
+      ListCard.::(h, this)
+
+   def length: Int =
+      this match
+         case Nil    => 0
+         case h :: t => 1 + t.length
+
+   def splitAt(i: Int): (ListCard, ListCard) =
+      if i <= 0 then (Nil, this)
+      else
+         this match
+            case Nil => (Nil, Nil)
+            case h :: t =>
+               val (l, r) = t.splitAt(i - 1)
+               (h :: l, r)
+
+   def sorted: ListCard =
+      val m = length / 2
+      if m == 0 then this
+      else
+         val (l, r) = splitAt(m)
+         merge(l.sorted, r.sorted)
+
+   private def merge(left: ListCard, right: ListCard): ListCard =
+      (left, right) match
+         case (Nil, _) => right
+         case (_, Nil) => left
+         case (l :: ls, (r :: rs)) =>
+            if l >= r
+            then l :: merge(ls, right)
+            else r :: merge(left, rs)
 
    def forall(p: Card => Boolean): Boolean =
       this match
-         case Nil        => true
-         case Cons(h, t) => p(h) && t.forall(p)
+         case Nil    => true
+         case h :: t => p(h) && t.forall(p)
 
    def exists(p: Card => Boolean): Boolean =
       this match
-         case Nil        => false
-         case Cons(h, t) => p(h) || t.exists(p)
+         case Nil    => false
+         case h :: t => p(h) || t.exists(p)
+
+   def mkString(sep: String) = ???
 
    def mkString(start: String, sep: String, end: String): String =
       this match
-         case Nil          => start + end
-         case Cons(h, Nil) => start + h + end
-         case Cons(h, t)   => t.mkString(start + h + sep, sep, end)
+         case Nil      => start + end
+         case h :: Nil => start + h + end
+         case h :: t   => t.mkString(start + h + sep, sep, end)
+
+   override def toString = mkString("ListCard(", ", ", ")")
 
 def isRoyalFlush(cs: ListCard): Boolean =
    cs.forall(p => p.suit == cs.head.suit && p.rank.isBroadway)
 
-def isFlush(cs: ListCard, suit: Suit): Boolean =
-   cs match
-      case Nil        => true
-      case Cons(h, t) => h.suit == suit && isFlush(t, suit)
+def isStraightFlush(cs: ListCard): Boolean =
+   isFlush(cs) && isStraight(cs)
 
-isRoyalFlush(Cons(Card(Ten, Diamonds), Cons(Card(Jack, Diamonds), Nil)))
+def isFlush(cs: ListCard): Boolean =
+   cs.forall(p => p.suit == cs.head.suit)
+
+def isStraight(cs: ListCard): Boolean =
+   val sorted = cs.sorted
+   sorted.head.rank.ordinal == sorted.last.rank.ordinal + 4
+
+isRoyalFlush(Card(Ten, Diamonds) :: Card(Jack, Diamonds) :: Nil)
 
 val card = Card(Ten, Diamonds)
 card.rank
@@ -44,7 +93,8 @@ card.rank
 Ten.isBroadway
 Two.isBroadway
 
-ListCard.Cons(
-   Card(Ten, Diamonds),
-   ListCard.Cons(Card(Jack, Hearts), ListCard.Nil)
-)
+(Card(Ten, Diamonds) :: Card(Jack, Hearts) :: Nil).sorted
+val cs = Card(Six, Diamonds) :: Card(Nine, Diamonds) :: Card(Eight, Diamonds) ::
+   Card(Seven, Diamonds) :: Card(Ten, Diamonds) :: Nil
+   
+isStraightFlush(cs)

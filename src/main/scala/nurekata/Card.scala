@@ -8,10 +8,13 @@ enum Rank:
       Ten, Jack, Queen, King, Ace
 
    def isBroadway: Boolean =
-      ordinal >= Rank.Ten.ordinal
+      this >= Rank.Ten
 
-   def value =
+   val value =
       ordinal + 2
+
+   def >=(other: Rank): Boolean =
+      ordinal >= other.ordinal
 
    override def toString: String =
       this match
@@ -35,3 +38,6 @@ enum Suit:
 case class Card(rank: Rank, suit: Suit):
    override def toString: String =
       rank.toString + suit.toString
+
+   def >=(other: Card): Boolean =
+      rank.value >= other.rank.value
