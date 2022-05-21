@@ -1,4 +1,3 @@
-import java.awt.Dimension
 import nurekata.Rank.*
 import nurekata.Suit.*
 import nurekata.*
@@ -13,6 +12,11 @@ enum ListCard:
          case Nil    => throw new NoSuchElementException
          case h :: _ => h
 
+   def tail: ListCard =
+      this match
+         case Nil    => throw new NoSuchElementException
+         case _ :: t => t
+
    def last: Card =
       this match
          case Nil      => throw new NoSuchElementException
@@ -25,7 +29,45 @@ enum ListCard:
    def length: Int =
       this match
          case Nil    => 0
-         case h :: t => 1 + t.length
+         case _ :: t => 1 + t.length
+
+   def contains(e: Card): Boolean =
+      this match
+         case Nil     => false
+         case x :: xs => x == e || xs.contains(e)
+
+   def isEmpty: Boolean =
+      this == Nil
+
+   def take(n: Int): ListCard =
+      this match
+         case x :: xs if n > 0 =>
+            x :: xs.take(n - 1)
+         case _ => Nil
+
+   def drop(n: Int): ListCard =
+      if n <= 0 || isEmpty
+      then this
+      else tail.drop(n - 1)
+
+   def takeWhile(p: Card => Boolean): ListCard =
+      this match
+         case x :: xs if p(x) =>
+            x :: xs.takeWhile(p)
+         case _ => Nil
+
+   def dropWhile(p: Card => Boolean): ListCard =
+      this match
+         case x :: xs if p(x) => xs.dropWhile(p)
+         case _               => this
+
+   def :::(prefix: ListCard): ListCard =
+      prefix match
+         case Nil     => this
+         case x :: xs => x :: xs ::: this
+
+   def span(f: Card => Boolean): (ListCard, ListCard) =
+      (takeWhile(f), dropWhile(f))
 
    def splitAt(i: Int): (ListCard, ListCard) =
       if i <= 0 then (Nil, this)
@@ -47,7 +89,7 @@ enum ListCard:
       (left, right) match
          case (Nil, _) => right
          case (_, Nil) => left
-         case (l :: ls, (r :: rs)) =>
+         case (l :: ls, r :: rs) =>
             if l >= r
             then l :: merge(ls, right)
             else r :: merge(left, rs)
@@ -61,8 +103,6 @@ enum ListCard:
       this match
          case Nil    => false
          case h :: t => p(h) || t.exists(p)
-
-   def mkString(sep: String) = ???
 
    def mkString(start: String, sep: String, end: String): String =
       this match
@@ -96,5 +136,5 @@ Two.isBroadway
 (Card(Ten, Diamonds) :: Card(Jack, Hearts) :: Nil).sorted
 val cs = Card(Six, Diamonds) :: Card(Nine, Diamonds) :: Card(Eight, Diamonds) ::
    Card(Seven, Diamonds) :: Card(Ten, Diamonds) :: Nil
-   
+
 isStraightFlush(cs)
