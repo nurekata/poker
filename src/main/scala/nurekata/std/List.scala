@@ -1,6 +1,7 @@
 package nurekata.std
 
 import nurekata.std.Ordering
+import scala.annotation.tailrec
 
 enum List[+A]:
    case Nil
@@ -31,9 +32,13 @@ enum List[+A]:
       List.::(h, this)
 
    def length: Int =
-      this match
-         case Nil    => 0
-         case _ :: t => 1 + t.length
+      @tailrec
+      def loop(xs: List[A], acc: Int): Int =
+         xs match
+            case Nil    => acc
+            case _ :: t => loop(t, acc + 1)
+
+      loop(this, 0)
 
    def contains[B >: A](e: B): Boolean =
       this match
@@ -44,12 +49,16 @@ enum List[+A]:
       this == Nil
 
    def take(n: Int): List[A] =
-      this match
-         case x :: xs if n > 0 =>
-            x :: xs.take(n - 1)
-         case _ => Nil
+      @tailrec
+      def loop(xs: List[A], n: Int, acc: List[A]): List[A] =
+         if n <= 0 || isEmpty
+         then acc
+         else loop(xs.tail, n - 1, xs.head :: acc)
 
-   def drop(n: Int): List[A] =
+      loop(this, n, Nil)
+
+   @tailrec
+   final def drop(n: Int): List[A] =
       if n <= 0 || isEmpty
       then this
       else tail.drop(n - 1)
@@ -82,6 +91,19 @@ enum List[+A]:
                val (l, r) = t.splitAt(i - 1)
                (h :: l, r)
 
+   def zip[B](that: List[B]): List[(A, B)] =
+      (this, that) match
+         case (x :: xs, y :: ys) => (x, y) :: xs.zip(ys)
+         case _                  => Nil
+
+   def unzip[A1, A2](using asPair: A => (A1, A2)): (List[A1], List[A2]) =
+      this match
+         case Nil => (Nil, Nil)
+         case h :: t =>
+            val (l, r) = asPair(h)
+            val (ls, rs) = t.unzip
+            (l :: ls, r :: rs)
+
    def sorted[B >: A](using ord: Ordering[B]): List[A] =
       val m = length / 2
       if m == 0 then this
@@ -89,7 +111,9 @@ enum List[+A]:
          val (l, r) = splitAt(m)
          merge(l.sorted, r.sorted)
 
-   private def merge[B >: A](left: List[A], right: List[A])(using ord: Ordering[B]): List[A] =
+   private def merge[B >: A](left: List[A], right: List[A])(using
+      ord: Ordering[B]
+   ): List[A] =
       (left, right) match
          case (Nil, _) => right
          case (_, Nil) => left
@@ -97,6 +121,9 @@ enum List[+A]:
             if ord.compare(l, r) <= 0
             then l :: merge(ls, right)
             else r :: merge(left, rs)
+
+   def sortBy[B](f: A => B)(using ord: Ordering[B]): List[A] =
+      sorted(using ord.on(f))
 
    def forall(p: A => Boolean): Boolean =
       this match
@@ -115,3 +142,5 @@ enum List[+A]:
          case h :: t   => t.mkString(start + h + sep, sep, end)
 
    override def toString: String = mkString("List(", ", ", ")")
+
+export List.*

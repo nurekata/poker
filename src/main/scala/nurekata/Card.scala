@@ -26,6 +26,8 @@ enum Rank:
          case Ten   => "T"
          case _     => value.toString
 
+export Rank.*
+
 object Rank:
    given ordering: Ordering[Rank] =
       Ordering.by(_.ordinal)
@@ -40,6 +42,8 @@ enum Suit:
          case Diamonds => "♦"
          case Clubs    => "♣"
 
+export Suit.*
+
 case class Card(rank: Rank, suit: Suit):
    override def toString: String =
       rank.toString + suit.toString
@@ -50,4 +54,4 @@ case class Card(rank: Rank, suit: Suit):
 object Card:
    given ordering: Ordering[Card] =
       Ordering.by(_.rank)
-      
+

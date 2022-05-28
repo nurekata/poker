@@ -6,6 +6,9 @@ trait Ordering[A]:
    def reverse: Ordering[A] =
       (x, y) => compare(y, x)
 
+   def on[B](f: B => A): Ordering[B] =
+      (x, y) => compare(f(x), f(y))
+
 object Ordering:
    def apply[A](using ord: Ordering[A]): Ordering[A] = ord
 
