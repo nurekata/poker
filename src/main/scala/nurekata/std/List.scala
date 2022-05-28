@@ -82,14 +82,14 @@ enum List[+A]:
                val (l, r) = t.splitAt(i - 1)
                (h :: l, r)
 
-   def sorted[B >: A](using ord: Ordering[B]): List[B] =
+   def sorted[B >: A](using ord: Ordering[B]): List[A] =
       val m = length / 2
       if m == 0 then this
       else
          val (l, r) = splitAt(m)
          merge(l.sorted, r.sorted)
 
-   private def merge[B >: A](left: List[B], right: List[B])(using ord: Ordering[B]): List[B] =
+   private def merge[B >: A](left: List[A], right: List[A])(using ord: Ordering[B]): List[A] =
       (left, right) match
          case (Nil, _) => right
          case (_, Nil) => left
@@ -114,4 +114,4 @@ enum List[+A]:
          case h :: Nil => start + h + end
          case h :: t   => t.mkString(start + h + sep, sep, end)
 
-   override def toString = mkString("List[A](", ", ", ")")
+   override def toString: String = mkString("List(", ", ", ")")
