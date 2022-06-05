@@ -13,23 +13,28 @@ enum HandCategory:
    case Quads
    case StraightFlush
 
+object HandCategory:
+   given ordering: Ordering[HandCategory] = 
+      Ordering.by(_.ordinal)
+
 export HandCategory.*
 
 final case class Hand(category: HandCategory, ranks: List[Rank])
 
 object Hand:
-   given rankOrdDesc: Ordering[Rank] = Rank.ordering.reverse
-   given cardOrdDesc: Ordering[Card] = Card.ordering.reverse
+
+   given ordering: Ordering[Hand] = 
+      Ordering.by(h => (h.category, h.ranks))
 
    def eval5(cs: List[Card]): Hand =
-      val ranks = cs.map(c => c.rank).sorted
+      val ranks = cs.map(c => c.rank).sortedDesc
       (isFlush(cs), isStraight(ranks)) match
          case (true, true)  => Hand(StraightFlush, ranks)
          case (true, false) => Hand(Flush, ranks)
          case (false, true) => Hand(Straight, ranks)
          case _ =>
-            val (rs, os) = occurs(ranks)
-               .sortBy((_, n) => -n)
+            val (os, rs) = occurs(ranks)
+               .sortedDesc
                .unzip
             os match
                case 4 :: _      => Hand(Quads, rs)
@@ -51,9 +56,13 @@ object Hand:
    def isLowStraight(sorted: List[Rank]): Boolean =
       sorted == Ace :: Five :: Four :: Three :: Two :: Nil
 
-   def occurs(sorted: List[Rank]): List[(Rank, Int)] =
+   def occurs(sorted: List[Rank]): List[(Int, Rank)] =
       sorted match
          case Nil => Nil
          case x :: _ =>
             val (same, rest) = sorted.span(_ == x)
-            (x, same.length + 1) :: occurs(rest)
+            (same.length, x) :: occurs(rest)
+
+extension [A](xs: List[A])
+   def sortedDesc(using ord: Ordering[A]): List[A] = 
+      xs.sorted(using ord.reverse)

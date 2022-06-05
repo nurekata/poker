@@ -28,17 +28,16 @@ enum List[+A]:
          case Nil    => Nil
          case h :: t => f(h) :: t.map(f)
 
+   def flatMap[B](f: A => List[B]): List[B] =
+      this match
+         case Nil    => Nil
+         case h :: t => f(h) ::: t.flatMap(f)
+
    def ::[B >: A](h: B): List[B] =
       List.::(h, this)
 
    def length: Int =
-      @tailrec
-      def loop(xs: List[A], acc: Int): Int =
-         xs match
-            case Nil    => acc
-            case _ :: t => loop(t, acc + 1)
-
-      loop(this, 0)
+      foldLeft(0)((n, _) => n + 1)
 
    def contains[B >: A](e: B): Boolean =
       this match
@@ -51,11 +50,11 @@ enum List[+A]:
    def take(n: Int): List[A] =
       @tailrec
       def loop(xs: List[A], n: Int, acc: List[A]): List[A] =
-         if n <= 0 || isEmpty
+         if n <= 0 || xs.isEmpty
          then acc
          else loop(xs.tail, n - 1, xs.head :: acc)
 
-      loop(this, n, Nil)
+      loop(this, n, Nil).reverse
 
    @tailrec
    final def drop(n: Int): List[A] =
@@ -78,6 +77,17 @@ enum List[+A]:
       prefix match
          case Nil     => this
          case x :: xs => x :: xs ::: this
+
+   def reverse: List[A] =
+      foldLeft(empty)((acc, x) => x :: acc)
+
+   def foldLeft[B](z: B)(f: (B, A) => B): B =
+      this match
+         case Nil    => z
+         case h :: t => t.foldLeft(f(z, h))(f)
+
+   def foldRight[B](z: B)(f: (A, B) => B): B =
+      reverse.foldLeft(z)((b, a) => f(a, b))
 
    def span(f: A => Boolean): (List[A], List[A]) =
       (takeWhile(f), dropWhile(f))
@@ -142,5 +152,14 @@ enum List[+A]:
          case h :: t   => t.mkString(start + h + sep, sep, end)
 
    override def toString: String = mkString("List(", ", ", ")")
+
+object List:
+   def empty[A]: List[A] = Nil
+
+   def apply[A](as: A*): List[A] =
+      as.foldRight(empty)((a, b) => a :: b)
+
+   def from[A](xs: IterableOnce[A]): List[A] =
+      xs.iterator.foldRight(empty)((a, b) => a :: b)
 
 export List.*
