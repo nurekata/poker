@@ -2,7 +2,6 @@ package nurekata
 
 import Rank.*
 import Suit.*
-import nurekata.std.*
 
 enum Rank:
    case Two, Three, Four, Five, Six, Seven, Eight, Nine,

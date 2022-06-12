@@ -17,6 +17,11 @@ enum List[+A]:
          case Nil    => throw new NoSuchElementException
          case _ :: t => t
 
+   def headOption: Option[A] =
+      this match 
+         case Nil    => None
+         case h :: _ => Some(h)
+
    def last: A =
       this match
          case Nil      => throw new NoSuchElementException
@@ -24,14 +29,10 @@ enum List[+A]:
          case _ :: tl  => tl.last
 
    def map[B](f: A => B): List[B] =
-      this match
-         case Nil    => Nil
-         case h :: t => f(h) :: t.map(f)
+      foldRight(empty)((a, acc) => f(a) :: acc)
 
    def flatMap[B](f: A => List[B]): List[B] =
-      this match
-         case Nil    => Nil
-         case h :: t => f(h) ::: t.flatMap(f)
+      foldRight(empty)((a, acc) => f(a) ::: acc)
 
    def ::[B >: A](h: B): List[B] =
       List.::(h, this)
@@ -45,7 +46,7 @@ enum List[+A]:
          case x :: xs => x == e || xs.contains(e)
 
    def isEmpty: Boolean =
-      this == Nil
+      this eq Nil
 
    def take(n: Int): List[A] =
       @tailrec
@@ -63,20 +64,22 @@ enum List[+A]:
       else tail.drop(n - 1)
 
    def takeWhile(p: A => Boolean): List[A] =
-      this match
-         case x :: xs if p(x) =>
-            x :: xs.takeWhile(p)
-         case _ => Nil
+      @tailrec
+      def loop(xs: List[A], acc: List[A]): List[A] =
+         if xs.isEmpty || !p(xs.head)
+         then acc.reverse
+         else loop(xs.tail, xs.head :: acc)
 
-   def dropWhile(p: A => Boolean): List[A] =
+      loop(this, Nil)
+
+   @tailrec
+   final def dropWhile(p: A => Boolean): List[A] =
       this match
          case x :: xs if p(x) => xs.dropWhile(p)
          case _               => this
 
    def :::[B >: A](prefix: List[B]): List[B] =
-      prefix match
-         case Nil     => this
-         case x :: xs => x :: xs ::: this
+      prefix.foldRight[List[B]](this)(_ :: _)
 
    def reverse: List[A] =
       foldLeft(empty)((acc, x) => x :: acc)
@@ -90,29 +93,32 @@ enum List[+A]:
       reverse.foldLeft(z)((b, a) => f(a, b))
 
    def span(f: A => Boolean): (List[A], List[A]) =
-      (takeWhile(f), dropWhile(f))
+      def loop(xs: List[A], acc: List[A]): (List[A], List[A]) =
+         xs match
+            case h :: t if f(h) => loop(t, h :: acc)
+            case _              => (acc.reverse, xs)
+      loop(this, Nil)
 
    def splitAt(i: Int): (List[A], List[A]) =
-      if i <= 0 then (Nil, this)
-      else
-         this match
-            case Nil => (Nil, Nil)
-            case h :: t =>
-               val (l, r) = t.splitAt(i - 1)
-               (h :: l, r)
+      def loop(xs: List[A], i: Int, acc: List[A]): (List[A], List[A]) =
+         xs match
+            case h :: t if i > 0 => loop(t, i - 1, h :: acc)
+            case _               => (acc.reverse, xs)
+
+      loop(this, i, Nil)
 
    def zip[B](that: List[B]): List[(A, B)] =
-      (this, that) match
-         case (x :: xs, y :: ys) => (x, y) :: xs.zip(ys)
-         case _                  => Nil
+      def loop(xs: List[A], ys: List[B], acc: List[(A, B)]): List[(A, B)] =
+         (xs, ys) match
+            case (x :: xs, y :: ys) => loop(xs, ys, (x, y) :: acc)
+            case _                  => acc.reverse
+      loop(this, that, Nil)
 
    def unzip[A1, A2](using asPair: A => (A1, A2)): (List[A1], List[A2]) =
-      this match
-         case Nil => (Nil, Nil)
-         case h :: t =>
-            val (l, r) = asPair(h)
-            val (ls, rs) = t.unzip
-            (l :: ls, r :: rs)
+      foldRight((empty[A1], empty[A2])) { case (a, (lr, rs)) =>
+         val (l, r) = asPair(a)
+         (l :: lr, r :: rs)
+      }
 
    def sorted[B >: A](using ord: Ordering[B]): List[A] =
       val m = length / 2
@@ -151,6 +157,12 @@ enum List[+A]:
          case h :: Nil => start + h + end
          case h :: t   => t.mkString(start + h + sep, sep, end)
 
+   def startsWith[B >: A](prefix: List[B]): Boolean =
+      (this, prefix) match
+         case (_, Nil)           => true
+         case (Nil, _)           => false
+         case (x :: xs, y :: ys) => x == y && xs.startsWith(ys)
+
    override def toString: String = mkString("List(", ", ", ")")
 
 object List:
@@ -161,5 +173,9 @@ object List:
 
    def from[A](xs: IterableOnce[A]): List[A] =
       xs.iterator.foldRight(empty)((a, b) => a :: b)
+
+   def fill[A](n: Int)(elem: => A): List[A] =
+      if n <= 0 then Nil
+      else elem :: fill(n - 1)(elem)
 
 export List.*

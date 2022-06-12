@@ -14,7 +14,7 @@ trait Ordering[A]:
    def orElse(that: Ordering[A]): Ordering[A] =
       (x, y) =>
          val c = compare(x, y)
-         if (c != 0) c
+         if c != 0 then c
          else that.compare(x, y)
 
 object Ordering:

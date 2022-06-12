@@ -4,7 +4,7 @@ enum Option[+A]:
    case None
    case Some(a: A)
 
-   def isEmpty: Boolean = this == None
+   def isEmpty: Boolean = this eq None
 
    def get: A =
       this match
@@ -16,9 +16,19 @@ enum Option[+A]:
          case None    => None
          case Some(a) => Some(f(a))
 
+   def flatMap[B](f: A => Option[B]): Option[B] =
+      this match
+         case None    => None
+         case Some(a) => f(a)
+
    def exists(p: A => Boolean): Boolean =
       this match
          case None    => false
+         case Some(a) => p(a)
+
+   def forall(p: A => Boolean): Boolean =
+      this match
+         case None    => true
          case Some(a) => p(a)
 
    def orElse[B >: A](alt: => Option[B]): Option[B] =
@@ -30,3 +40,5 @@ enum Option[+A]:
       this match
          case None    => default
          case Some(a) => a
+
+export Option.*
