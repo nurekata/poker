@@ -1,5 +1,7 @@
 package nurekata
 
+import nurekata.syntax.*
+
 object Hand5:
    import Hand.occurs
 

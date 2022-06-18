@@ -1,4 +1,4 @@
-package nurekata.df
+package nurekata.std
 
 import munit.ScalaCheckSuite
 import org.scalacheck.Prop.*
@@ -11,12 +11,19 @@ class ListSuite extends ScalaCheckSuite:
 
    val int: Gen[Int] = Gen.choose(Int.MinValue, Int.MaxValue)
 
+   extension [A](gs: List[Gen[A]])
+      def sequence: Gen[List[A]] =
+         gs.foldRight(Gen.const(List.empty[A]))((g, acc) =>
+            for
+               x <- g
+               xs <- acc
+            yield x :: xs
+         )
+
    def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] =
       List
          .fill(n)(g)
-         .foldLeft(Gen.const(empty[A]))((acc, g) =>
-            g.flatMap(x => acc.map(x :: _))
-         )
+         .sequence
 
    val list: Gen[List[Int]] =
       Gen.sized(s =>
@@ -65,7 +72,7 @@ class ListSuite extends ScalaCheckSuite:
 
    property("zip/unzip") {
       forAll { (xs: List[Int], ys: List[Int]) =>
-         val (xss, yss) = (xs zip ys).unzip
+         val (xss, yss) = xs.zip(ys).unzip
          xs.startsWith(xss) && ys.startsWith(yss) &&
          xss.length == yss.length &&
          xss.length == min(xs.length, ys.length)

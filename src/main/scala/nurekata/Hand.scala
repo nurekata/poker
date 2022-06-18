@@ -1,6 +1,7 @@
 package nurekata
 
 import scala.Ordering.Implicits.seqOrdering
+import nurekata.syntax.*
 
 enum HandCategory:
    case HighCard
@@ -25,6 +26,9 @@ object Hand:
 
    given ordering: Ordering[Hand] =
       Ordering.by(h => (h.category, h.ranks))
+
+   def eval(pocket: Pocket, board: Board): Hand =
+      eval(pocket._1 :: pocket._2 :: board)
 
    def eval(cs: List[Card]): Hand =
       val ranks = cs.map(c => c.rank).sortedDesc
@@ -79,6 +83,3 @@ object Hand:
             val (same, rest) = sorted.span(_ == x)
             (same.length, x) :: occurs(rest)
 
-extension [A](xs: List[A])
-   def sortedDesc(using ord: Ordering[A]): List[A] =
-      xs.sorted(using ord.reverse)
