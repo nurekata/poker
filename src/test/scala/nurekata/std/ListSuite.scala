@@ -6,24 +6,25 @@ import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
 import nurekata.std.*
 import Math.*
+import cats.Applicative
 
 class ListSuite extends ScalaCheckSuite:
 
    val int: Gen[Int] = Gen.choose(Int.MinValue, Int.MaxValue)
 
+   extension [A](g: Gen[A])
+      def replicateA(n: Int): Gen[List[A]] =
+         List.fill(n)(g).sequence
+
+      def map2[B, C](gb: Gen[B])(f: (A, B) => C): Gen[C] =
+         g.flatMap(a => gb.map(b => f(a, b)))
+
    extension [A](gs: List[Gen[A]])
       def sequence: Gen[List[A]] =
-         gs.foldRight(Gen.const(List.empty[A]))((g, acc) =>
-            for
-               x <- g
-               xs <- acc
-            yield x :: xs
-         )
+         gs.foldRight(Gen.const(List.empty[A]))((g, acc) => g.map2(acc)(_ :: _))
 
    def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] =
-      List
-         .fill(n)(g)
-         .sequence
+      g.replicateA(n)
 
    val list: Gen[List[Int]] =
       Gen.sized(s =>

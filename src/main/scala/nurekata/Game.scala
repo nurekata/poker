@@ -1,7 +1,7 @@
 package nurekata
 
 import nurekata.Deal.*
-import nurekata.syntax.*
+import nurekata.syntax.sortDescBy
 
 final case class Account(name: String)
 
