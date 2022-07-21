@@ -1,4 +1,6 @@
 ThisBuild / scalaVersion := "3.1.2"
+ThisBuild / versionScheme := Some("early-semver")
+ThisBuild / githubWorkflowPublishTargetBranches := Seq()
 
 lazy val root = project
    .in(file("."))
