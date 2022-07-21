@@ -1,11 +1,10 @@
-val scala3Version = "3.1.2"
+ThisBuild / scalaVersion := "3.1.2"
 
 lazy val root = project
    .in(file("."))
    .settings(
       name := "poker",
       version := "0.1.0-SNAPSHOT",
-      scalaVersion := scala3Version,
       scalacOptions ++= Seq("-source:future"),
       libraryDependencies ++= Seq(
          "org.scalameta" %% "munit" % "0.7.29" % Test,
