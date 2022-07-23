@@ -82,4 +82,3 @@ object Hand:
          case x :: _ =>
             val (same, rest) = sorted.span(_ == x)
             (same.length, x) :: occurs(rest)
-

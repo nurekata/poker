@@ -7,4 +7,4 @@ object generators:
    val accountGen: Gen[Account] =
       alphaNumStr.map(n => Account(n))
 
-   val deckGen: Gen[Deck] = Gen.delay(Gen.const(Deck()))   
+   val deckGen: Gen[Deck] = Gen.delay(Gen.const(Deck()))

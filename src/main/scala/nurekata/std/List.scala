@@ -18,7 +18,7 @@ enum List[+A]:
          case _ :: t => t
 
    def headOption: Option[A] =
-      this match 
+      this match
          case Nil    => None
          case h :: _ => Some(h)
 

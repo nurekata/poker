@@ -20,3 +20,9 @@ final case class Game(players: List[Player], board: Board):
 
 def start(accounts: List[Account]): Deal[Game] =
    dealToPlayers(accounts).map2(dealBoard)(Game.apply)
+
+//fold
+//call
+//raise
+//check
+//next

@@ -2,6 +2,8 @@ ThisBuild / scalaVersion := "3.1.2"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
 
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 lazy val root = project
    .in(file("."))
    .settings(
@@ -10,6 +12,6 @@ lazy val root = project
       scalacOptions ++= Seq("-source:future"),
       libraryDependencies ++= Seq(
          "org.scalameta" %% "munit" % "0.7.29" % Test,
-         "org.scalameta" %% "munit-scalacheck" % "0.7.29" % Test
-      )
+         "org.scalameta" %% "munit-scalacheck" % "0.7.29" % Test,
+      ),
    )

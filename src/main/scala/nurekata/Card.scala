@@ -53,4 +53,3 @@ case class Card(rank: Rank, suit: Suit):
 object Card:
    given ordering: Ordering[Card] =
       Ordering.by(_.rank)
-

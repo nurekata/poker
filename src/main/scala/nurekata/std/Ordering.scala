@@ -32,7 +32,7 @@ object Ordering:
 
    given tuple[A, B](using
       ordA: Ordering[A],
-      ordB: Ordering[B]
+      ordB: Ordering[B],
    ): Ordering[(A, B)] =
       (x, y) =>
          val c1 = ordA.compare(x._1, y._1)

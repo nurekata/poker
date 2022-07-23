@@ -2,7 +2,8 @@ package nurekata
 
 import scala.util.Random
 import nurekata.syntax.*
-import cats.Applicative
+import nurekata.fp.Applicative
+import nurekata.fp.Traverse.given
 
 opaque type Deck = List[Card]
 
@@ -62,14 +63,16 @@ object Deal:
    def dealToPlayer(acc: Account): Deal[Player] =
       dealPocket.map(p => Player(acc, p))
 
-   def dealToPlayers(names: List[Account]): Deal[List[Player]] =
-      names.traverse(dealToPlayer)
+   def dealToPlayers(accounts: List[Account]): Deal[List[Player]] =
+      accounts.traverse(dealToPlayer)
 
    def dealBoard: Deal[Board] =
       deal.replicateA(5)
 
    given dealApplicative: Applicative[Deal] with
-      def pure[A](a: A): Deal[A] = Deal.pure(a)
+      extension [A](a: A)
+         def pure: Deal[A] =
+            Deal.pure(a)
 
       extension [A](da: Deal[A])
          override def map2[B, C](db: Deal[B])(f: (A, B) => C): Deal[C] =

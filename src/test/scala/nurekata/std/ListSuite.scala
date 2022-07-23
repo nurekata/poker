@@ -6,22 +6,32 @@ import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
 import nurekata.std.*
 import Math.*
-import cats.Applicative
+import nurekata.fp.Applicative
+import nurekata.fp.Traverse
 
 class ListSuite extends ScalaCheckSuite:
+
+   given Applicative[Gen] with
+      extension [A](a: A)
+         def pure: Gen[A] =
+            Gen.const(a)
+
+      extension [A, B](ff: Gen[A => B])
+         override def ap(fa: Gen[A]): Gen[B] =
+            ff.flatMap(fa.map)
+
+   given Traverse[List] with
+      extension [A](as: List[A])
+         def traverse[G[_]: Applicative, B](f: A => G[B]): G[List[B]] =
+            as.foldRight(List.empty.pure)((a, acc) =>
+               f(a).map2(acc)((b: B, bs) => b :: bs)
+            )
 
    val int: Gen[Int] = Gen.choose(Int.MinValue, Int.MaxValue)
 
    extension [A](g: Gen[A])
       def replicateA(n: Int): Gen[List[A]] =
          List.fill(n)(g).sequence
-
-      def map2[B, C](gb: Gen[B])(f: (A, B) => C): Gen[C] =
-         g.flatMap(a => gb.map(b => f(a, b)))
-
-   extension [A](gs: List[Gen[A]])
-      def sequence: Gen[List[A]] =
-         gs.foldRight(Gen.const(List.empty[A]))((g, acc) => g.map2(acc)(_ :: _))
 
    def listOfN[A](n: Int, g: Gen[A]): Gen[List[A]] =
       g.replicateA(n)
